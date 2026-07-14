@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الإدارة | خيرات الرافدين للعقارات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+    <nav class="admin-nav">
+        <h2><i class="fas fa-cogs"></i> لوحة التحكم</h2>
+        <div class="nav-links">
+            <button class="tab-btn active" data-target="add-property">إضافة عقار</button>
+            <button class="tab-btn" data-target="manage-properties">العقارات</button>
+            <button class="tab-btn" data-target="manage-banners">البنرات</button>
+            <button class="tab-btn" data-target="manage-areas">المناطق</button>
+            <button class="tab-btn" data-target="manage-services">الخدمات</button>
+        </div>
+    </nav>
+
+    <div class="admin-container">
+        
+        <section id="add-property" class="tab-content active">
+            <h3>إضافة إعلان جديد</h3>
+            <form id="property-form">
+                
+                <div class="form-group">
+                    <label>صور العقار (يمكن تحديد أكثر من صورة)</label>
+                    <input type="file" id="property-images" multiple accept="image/*">
+                    <small style="color: #64748b; display: block; margin-top: 6px;">إذا توقف رفع الصور، ضع روابط الصور في الحقل التالي بدلاً من اختيار ملفات.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>روابط صور العقار (اختياري)</label>
+                    <textarea id="property-image-links" rows="3" placeholder="ضع كل رابط صورة في سطر مستقل"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>عنوان العقار</label>
+                        <input type="text" id="prop-title" placeholder="مثال: منزل حديث البناء" required>
+                    </div>
+                    <div class="form-group">
+                        <label>رقم العقار (اختياري)</label>
+                        <input type="text" id="prop-number" placeholder="مثال: PRP-1001">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم واتساب العقار</label>
+                        <input type="tel" id="prop-phone" placeholder="مثال: 07700000000 أو 9647700000000">
+                    </div>
+                    <div class="form-group">
+                        <label>حالة العقار</label>
+                        <select id="prop-status">
+                            <option value="متاح">متاح</option>
+                            <option value="مباع">مباع</option>
+                            <option value="محجوز">محجوز</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>نوع العقار</label>
+                        <select id="prop-type" required>
+                            <option value="منزل">منزل</option>
+                            <option value="أرض سكنية">أرض سكنية</option>
+                            <option value="محل">محل</option>
+                            <option value="أرض زراعية">أرض زراعية</option>
+                            <option value="للإيجار">للإيجار</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>المنطقة</label>
+                        <select id="prop-area" required>
+                            <option value="">جاري تحميل المناطق...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السعر المطلوب (بالدينار العراقي)</label>
+                        <input type="number" id="prop-price" required>
+                    </div>
+                    <div class="form-group">
+                        <label>عمولة المكتب (بالدينار العراقي)</label>
+                        <input type="number" id="prop-office-commission" placeholder="مثال: 250000">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="prop-negotiable">
+                        <label for="prop-negotiable">السعر قابل للتفاوض</label>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>المساحة (م²)</label>
+                        <input type="number" id="prop-space" placeholder="مثال: 200" required>
+                    </div>
+                    <div class="form-group">
+                        <label>الأبعاد</label>
+                        <input type="text" id="prop-dimensions" placeholder="مثال: 10x20">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>موقع العقار على الخريطة</label>
+                    <button type="button" id="get-current-location-btn" class="action-btn" style="margin-bottom: 10px; background: #10b981;">📍 تحديد موقعي الحالي</button>
+                    <div id="map" style="height: 300px; width: 100%; border-radius: 8px; border: 1px solid #cbd5e1; z-index: 1;"></div>
+                    <input type="hidden" id="prop-lat">
+                    <input type="hidden" id="prop-lng">
+                    <small style="color: #64748b; display: block; margin-top: 5px;">قم بالنقر على الخريطة لتحديد موقع العقار بدقة، أو استخدم زر تحديد موقعي الحالي.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>الوصف الكامل</label>
+                    <textarea id="prop-desc" rows="4" placeholder="اكتب تفاصيل العقار ومميزاته هنا..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>وصف عمولة المكتب</label>
+                    <textarea id="prop-commission-note" rows="3" placeholder="مثال: ملاحظة: عمولة المكتب تضاف على سعر العقار وتدفع عند إكمال الاتفاق."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>الخدمات والمميزات</label>
+                    <div id="services-container" class="services-grid">
+                        جاري تحميل الخدمات...
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="prop-featured">
+                        <label for="prop-featured" style="color: #f59e0b; font-weight: bold;">⭐ تمييز العقار (عرض في القمة)</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="save-prop-btn">حفظ ونشر الإعلان</button>
+                <button type="button" class="secondary-btn" id="cancel-edit-btn" hidden>إلغاء التعديل</button>
+            </form>
+        </section>
+
+        <section id="manage-properties" class="tab-content">
+            <h3>العقارات المحفوظة</h3>
+            <div class="manager-toolbar">
+                <button id="refresh-properties-btn" class="action-btn">تحديث القائمة</button>
+            </div>
+            <div id="properties-list" class="cards-list">جاري تحميل العقارات...</div>
+        </section>
+
+        <section id="manage-banners" class="tab-content">
+            <h3>بنرات الإعلانات</h3>
+            <form id="banner-form" class="compact-form">
+                <div class="form-group">
+                    <label>صورة البنر بنسبة 2.35:1</label>
+                    <input type="file" id="banner-image" accept="image/*">
+                </div>
+                <div class="form-group">
+                    <label>أو رابط صورة البنر</label>
+                    <input type="url" id="banner-image-url" placeholder="https://example.com/banner.jpg">
+                </div>
+                <button type="submit" class="submit-btn" id="save-banner-btn">إضافة بنر</button>
+            </form>
+            <div id="banners-list" class="cards-list">جاري تحميل البنرات...</div>
+        </section>
+
+        <section id="manage-areas" class="tab-content">
+            <h3>إدارة المناطق</h3>
+            <div class="add-box">
+                <input type="text" id="new-area-name" placeholder="اسم المنطقة الجديدة...">
+                <button id="add-area-btn" class="action-btn">إضافة</button>
+                <button id="cancel-area-edit-btn" class="secondary-btn inline-cancel-btn" hidden>إلغاء</button>
+            </div>
+            <ul id="areas-list" class="data-list"></ul>
+        </section>
+
+        <section id="manage-services" class="tab-content">
+            <h3>إدارة الخدمات</h3>
+            <div class="add-box">
+                <input type="text" id="new-service-name" placeholder="اسم الخدمة (مثال: ماء, شارع معبد)...">
+                <button id="add-service-btn" class="action-btn">إضافة</button>
+                <button id="cancel-service-edit-btn" class="secondary-btn inline-cancel-btn" hidden>إلغاء</button>
+            </div>
+            <ul id="services-list" class="data-list"></ul>
+        </section>
+
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
